@@ -1,1 +1,3 @@
 # ADVANCED-DATABASE-MANAGEMENT
+
+Irio Veterinary Clinic & Surgical offers pet owners a range of services including surgeries, treatments, vaccinations, and grooming. To manage the clinic efficiently, an interactive system has been implemented to handle pet registrations, medical histories, appointments, and medication lists. This system aids in minimizing errors associated with manual systems and enables systematic and effective database storage of all pet-related data, which helps in managing daily operations and providing reports for visiting pets and their owners. The database administrator is responsible for maintaining and extracting large volumes of data, which can help senior management make more effective decisions to boost the company's profit.
