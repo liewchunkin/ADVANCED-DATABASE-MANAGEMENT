@@ -1,0 +1,69 @@
+CLEAR COLUMNS
+CLEAR BREAKS
+CLEAR COMPUTES
+TTITLE OFF
+REPFOOTER OFF
+
+SET LINESIZE 150
+SET PAGESIZE 50
+
+-- VIEW
+CREATE OR REPLACE VIEW GET_TREATMENTPRICE_YEAR_MONTH AS
+SELECT EXTRACT(YEAR FROM A.appointment_datetime) AS YEAR,
+	EXTRACT(MONTH FROM appointment_datetime) AS "MONTH NO",
+	  TO_CHAR(TO_DATE(EXTRACT(MONTH FROM A.appointment_datetime), 'MM'), 'Month') AS "MONTH NAME" ,
+	C.cust_id, C.cust_lname, P.pet_id, P.pet_name,
+	(SUM(AD.medicine_qty)* M.medicine_price +
+	T.treatment_price) AS "MONTHLY SALES"
+FROM appointment_details AD, appointment A, pet P, customer C, medicine M, treatment T
+WHERE AD.treatment_id = T.treatment_id AND
+	AD.appointment_id = A.appointment_id AND
+      AD.medicine_id = M.medicine_id AND
+	A.pet_id = P.pet_id AND
+	P.cust_id = C.cust_id
+GROUP BY EXTRACT(YEAR FROM A.appointment_datetime), EXTRACT(MONTH FROM A.appointment_datetime), C.cust_id, C.cust_lname,
+M.medicine_price, T.treatment_price, P.pet_id, P.pet_name
+ORDER BY YEAR,"MONTH NO", C.cust_id ;
+
+-- VIEW
+CREATE OR REPLACE VIEW GET_TREATMENTPRICE_YEAR AS
+SELECT YM.YEAR,
+YM.cust_id, YM.pet_id, SUM(YM."MONTHLY SALES") AS "YEARLY SALES"
+FROM GET_TREATMENTPRICE_YEAR_MONTH YM
+GROUP BY YM.YEAR,YM.cust_id,YM.pet_id
+ORDER BY YEAR, YM.cust_id, YM.pet_id;
+
+ACCEPT PERVIOUSYEAR DATE FORMAT 'YYYY'-
+PROMPT 'Enter previous year: '
+
+ACCEPT CURRENTYEAR DATE FORMAT 'YYYY'-
+PROMPT 'Enter current year : '
+
+COLUMN "SALES OF &PERVIOUSYEAR" FORMAT 9,999,999.99
+COLUMN "SALES OF &CURRENTYEAR" FORMAT 9,999,999.99
+COLUMN DIFFERENCE FORMAT 999,999.99
+COLUMN "PERCENTAGE (%)" FORMAT 999.99
+
+COLUMN cust_id HEADING "CUSTOMER ID"
+COLUMN cust_lname HEADING "CUSTOMER NAME"
+COLUMN pet_id HEADING "PET ID"
+COLUMN pet_name HEADING "PET NAME"
+
+COLUMN cust_id FORMAT A11
+COLUMN cust_lname FORMAT A20
+COLUMN pet_id FORMAT A10
+COLUMN pet_name FORMAT A20
+CLEAR SCREEN
+
+TTITLE LEFT 'COMPARISON TREATMENT SALES BETWEEN '&PERVIOUSYEAR' AND '&CURRENTYEAR' BY PETS'SKIP 2
+
+SELECT C.cust_id, C.cust_lname, P.pet_id, P.pet_name, Y1."YEARLY SALES" AS "SALES OF &PERVIOUSYEAR", Y2."YEARLY SALES" AS "SALES OF &CURRENTYEAR", (Y2."YEARLY SALES" - Y1."YEARLY SALES") AS DIFFERENCE, ((Y2."YEARLY SALES" - Y1."YEARLY SALES")/ Y2."YEARLY SALES") * 100 AS "PERCENTAGE (%)"
+FROM customer C, pet P, GET_TREATMENTPRICE_YEAR Y1, GET_TREATMENTPRICE_YEAR Y2
+WHERE Y1.YEAR = '&PERVIOUSYEAR' AND
+	Y2.YEAR = '&CURRENTYEAR' AND
+	Y1.cust_id = C.cust_id AND
+	Y2.cust_id = C.cust_id AND
+	Y1.cust_id = Y2.cust_id AND
+	Y1.pet_id = P.pet_id AND
+	Y2.pet_id = P.pet_id AND
+	Y1.pet_id = Y2.pet_id;

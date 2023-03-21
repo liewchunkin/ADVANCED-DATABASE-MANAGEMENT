@@ -1,0 +1,63 @@
+SET LINESIZE 300
+SET PAGESIZE 100
+
+CREATE OR REPLACE VIEW VETERINARIAN_FREQUENCY_VIEW AS
+SELECT EXTRACT(YEAR FROM A.appointment_datetime) AS "Year", V.VETERINARIAN_ID AS "Veterinarian",
+ 		COUNT(A.appointment_datetime) AS "Frequency"
+FROM appointment_details AD, appointment A, treatment T, veterinarian V
+WHERE AD.treatment_id = T.treatment_id AND
+	AD.appointment_id = A.appointment_id AND
+      V.veterinarian_id = AD.veterinarian_id
+GROUP BY EXTRACT(YEAR FROM A.appointment_datetime), V.veterinarian_id
+ORDER BY "Year", "Veterinarian";
+
+CREATE OR REPLACE VIEW TOTAL_FREQUENCY_VIEW AS
+SELECT "Year", SUM("Frequency") AS "Total Frequency"
+FROM VETERINARIAN_FREQUENCY_VIEW
+GROUP BY "Year"
+ORDER BY "Year";
+
+CREATE OR REPLACE VIEW BEST_VIEW AS
+SELECT "Year", MAX("Frequency") AS "Max Frequency"
+FROM VETERINARIAN_FREQUENCY_VIEW
+GROUP BY "Year"
+ORDER BY "Year";
+
+SET SERVEROUTPUT ON;
+CREATE OR REPLACE PROCEDURE MOST_VETERINARIAN_SURGERY_PROC AS
+
+ CURSOR VETERINARIAN_CURSOR IS
+   SELECT A."Year", A."Veterinarian", C."Max Frequency", ROUND(C."Max Frequency"/"Total Frequency" * 100,2) AS "Percentage (%)"
+   FROM VETERINARIAN_FREQUENCY_VIEW A, TOTAL_FREQUENCY_VIEW B, BEST_VIEW C
+   WHERE A."Year" = B."Year" AND
+      B."Year" = C."Year" AND
+      A."Frequency" = C."Max Frequency"
+   ORDER BY A."Year";
+
+   VETERINARIAN_REC VETERINARIAN_CURSOR%ROWTYPE;
+
+BEGIN
+ DBMS_OUTPUT.PUT_LINE(CHR(10));
+ DBMS_OUTPUT.PUT_LINE('Summary Report - Most Veterinarian Surgery Record in Each Year');
+ DBMS_OUTPUT.PUT_LINE(LPAD('Report generated on : ', 100, ' ') || TO_CHAR(CURRENT_DATE, 'DD-MM-YYYY HH:MI:SS') || ' by ' || USER);
+ DBMS_OUTPUT.PUT_LINE(CHR(10)||
+  			    RPAD('Year',10, ' ') || ' ' ||
+ 			   	     RPAD('Veterinarian',15, ' ') || ' ' ||
+ 			    RPAD('Frequency',15,' ') || ' ' ||
+ 			    RPAD('Percentage (%)',20,' '));
+
+ DBMS_OUTPUT.PUT_LINE(LPAD('-',55,'-'));
+
+ FOR VETERINARIAN_REC IN VETERINARIAN_CURSOR LOOP
+
+ DBMS_OUTPUT.PUT_LINE(RPAD(VETERINARIAN_REC."Year",13,' ')||' '||
+ 		          RPAD(VETERINARIAN_REC."Veterinarian",16,' ')|| ' '||
+ 			    RPAD(VETERINARIAN_REC."Max Frequency",16,' ')|| ' ' ||
+ 			    LPAD(VETERINARIAN_REC."Percentage (%)", 5,' '));
+ END LOOP;
+ DBMS_OUTPUT.PUT_LINE(LPAD('=',55,'='));
+ DBMS_OUTPUT.PUT_LINE(CHR(10)||LPAD('-END OF REPORT-',33,' '));
+END;
+/
+
+/* EXEC MOST_VETERINARIAN_SURGERY_PROC() */

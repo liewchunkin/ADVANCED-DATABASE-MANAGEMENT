@@ -1,0 +1,1326 @@
+/* You may insert all settings here eg: SET LINESIZE 120*/
+set linesize 200
+set pagesize 100
+alter SESSION set NLS_DATE_FORMAT = 'DD-MM-YYYY HH24:MI:SS';
+
+--DROP TABLE--
+DROP TABLE appointment_details;
+DROP TABLE supplier_detail;
+DROP TABLE supplier;
+DROP TABLE medicine;
+DROP TABLE cage;
+DROP TABLE veterinarian;
+DROP TABLE treatment;
+DROP TABLE appointment;
+DROP TABLE payment;
+DROP TABLE pet;
+DROP TABLE customer;
+
+--CREATE TABLE--
+CREATE TABLE customer(
+ cust_id CHAR(5) NOT NULL,
+ cust_fname VARCHAR(30) NOT NULL,
+ cust_lname VARCHAR(30) NOT NULL,
+ cust_hp VARCHAR(12) NOT NULL,
+ cust_email VARCHAR(50) NOT NULL,
+ cust_dob DATE NOT NULL,
+ cust_gender CHAR(1),
+ cust_ic CHAR(12) NOT NULL,
+CONSTRAINT pk_customer PRIMARY KEY (cust_id),
+CONSTRAINT chk_email CHECK (REGEXP_LIKE(cust_email, '^[a-zA-Z]\w+@(\S+)$')),
+CONSTRAINT chk_memberPhone CHECK (REGEXP_LIKE(cust_hp, '^0\d{9}|\d{11,12}$')),
+CONSTRAINT chk_cust_ic CHECK (REGEXP_LIKE(cust_ic, '^0\d{9}|\d{12}$')),
+CONSTRAINT uni_cust_ic UNIQUE (cust_ic),
+CONSTRAINT chk_cust_gender CHECK (cust_gender in ('M','F'))
+);
+
+CREATE TABLE pet (
+ pet_id CHAR(5) NOT NULL,
+ pet_name VARCHAR(60) NOT NULL,
+ pet_species VARCHAR(15) NOT NULL,
+ pet_born_year DATE NOT NULL,
+ cust_id CHAR(5) NOT NULL,
+CONSTRAINT pk_pet PRIMARY KEY (pet_id),
+CONSTRAINT fk_cust_id FOREIGN KEY (cust_id)
+REFERENCES customer(cust_id)
+);
+
+CREATE TABLE payment (
+ payment_id CHAR(5) NOT NULL,
+ payment_amount NUMBER(7,2) NOT NULL,
+ payment_date DATE NOT NULL,
+ payment_type CHAR(15) NOT NULL,
+CONSTRAINT pk_payment PRIMARY KEY (payment_id)
+);
+
+create table appointment
+( appointment_id         char(5) NOT NULL,
+  appointment_datetime date,
+  appointment_status  char(10),
+  pet_id CHAR(5) NOT NULL,
+  payment_id CHAR(5) NULL,
+  constraint pk_appointment
+  primary key (appointment_id),
+  constraint fk_appointment_pet
+  foreign key (pet_id) references pet (pet_id),
+  constraint fk_appointment_payment
+  foreign key (payment_id) references payment (payment_id)
+);
+
+CREATE TABLE treatment (
+ treatment_id CHAR(5) NOT NULL,
+ treatment_name VARCHAR(60) NOT NULL,
+ treatment_desc VARCHAR(100) NOT NULL,
+ treatment_cost NUMBER(7,2) NOT NULL,
+ treatment_price NUMBER(7,2) NOT NULL,
+ CONSTRAINT pk_treatment PRIMARY KEY (treatment_id)
+);
+
+CREATE TABLE veterinarian(
+ veterinarian_id CHAR(5) NOT NULL,
+ veterinarian_name VARCHAR(60) NOT NULL,
+ veterinarian_ic VARCHAR(15) NOT NULL,
+ veterinarian_salary NUMBER(7,2) NOT NULL,
+ veterinarian_email VARCHAR(50) NOT NULL,
+ veterinarian_tel VARCHAR(12) NOT NULL,
+ veterinarian_working_hours NUMBER(2) NOT NULL,
+ veterinarian_status VARCHAR(12) NOT NULL,
+ CONSTRAINT pk_veterinarian PRIMARY KEY (veterinarian_id),
+ CONSTRAINT chk_working_hours CHECK (veterinarian_working_hours > 4 AND veterinarian_working_hours < 12),
+ CONSTRAINT chk_email_2 CHECK (REGEXP_LIKE(veterinarian_email, '^[a-zA-Z]\w+@(\S+)$')),
+ CONSTRAINT chk_vetePhone CHECK (REGEXP_LIKE(veterinarian_tel, '^0\d{9}|\d{11,12}$'))
+);
+
+
+create table cage
+( cage_ID char(5) NOT NULL,
+  cage_row number(3) NOT NULL,
+  cage_column number(3) NOT NULL,
+  constraint pk_cage
+  primary key (cage_ID)
+);
+
+create table medicine
+( medicine_ID char(5) NOT NULL,
+  medicine_name  varchar(20)     NOT NULL,
+  medicine_desc varchar(150),
+  medicine_qty number (4) NOT NULL,
+  medicine_price number(7,2)     NOT NULL,
+  medicine_cost  number(6,2)     NOT NULL,
+  constraint pk_medicine
+  primary key (medicine_ID)
+);
+
+create table supplier
+( supplier_id CHAR(5) NOT NULL,
+  supplier_name varchar(30),
+  supplier_businessid INT,
+  supplier_contactno varchar(10),
+ supplier_email varchar(30) ,
+  constraint pk_supplier primary key (supplier_id)
+);
+
+create table supplier_detail
+( supplier_id CHAR(5) NOT NULL,
+  medicine_id CHAR(5) NOT NULL,
+  order_date DATE NOT NULL,
+  arrive_date DATE,
+  medicine_qty INT,
+  constraint pk_supp primary key (supplier_id , medicine_id, order_date),
+  constraint fk_supplier foreign key (supplier_id) references supplier (supplier_id),
+  constraint fk_medicine foreign key (medicine_id) references medicine (medicine_id)
+);
+
+CREATE TABLE appointment_details  (
+ treatment_id CHAR(5) NOT NULL,
+ appointment_id CHAR(5) NOT NULL,
+ medicine_id CHAR(5) NOT NULL,
+ medicine_qty NUMBER(3) NOT NULL,
+ medicine_unitPrice NUMBER(5,2) NOT NULL,
+ veterinarian_id CHAR(5) NOT NULL,
+ cage_id CHAR(5) NOT NULL,
+ CONSTRAINT pk_appointment_details PRIMARY KEY (treatment_id, appointment_id),
+ CONSTRAINT fk_treatment_id FOREIGN KEY (treatment_id) 
+ REFERENCES treatment(treatment_id),
+ CONSTRAINT fk_appointment_id FOREIGN KEY (appointment_id)
+ REFERENCES appointment(appointment_id),
+ CONSTRAINT fk_veterinarian_id FOREIGN KEY (veterinarian_id)
+ REFERENCES veterinarian(veterinarian_id),
+ CONSTRAINT fk_medicine_id FOREIGN KEY (medicine_id)
+ REFERENCES medicine(medicine_id),
+ CONSTRAINT fk_cage_id FOREIGN KEY (cage_id)
+ REFERENCES cage(cage_id)
+);
+
+--INSERT RECORD--
+
+--customer--
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0001', 'Kliment', 'Wilsher', '0159239446', 'kwilsher0@cnbc.com', '28/09/2000', 'M', '000928100101');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0002', 'Gussy', 'Greer', '0151602720', 'ggreer1@google.ca', '18/01/1999', 'M', '990118120103');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0003', 'Husein', 'Butfield', '0175207266', 'hbutfield2@yahoo.co.jp','04/07/1999', 'M', '990704130105');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0004', 'Aurelea', 'Whorton', '0175138558', 'awhorton3@studiopress.com', '24/01/1998', 'M', '980124140107');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0005', 'Frederick', 'Winmill', '0144230035', 'fwinmill4@auda.org.au', '24/01/1997', 'M', '970124150109');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0006', 'Stinky', 'Meins', '0196072925', 'smeins5@imgur.com', '24/01/1996', 'F', '960124160102');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0007', 'Hillary', 'Jackett', '0191572132', 'hjackett6@clickbank.net', '24/03/1998', 'M', '980324170201');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0008', 'Rollo', 'Cahalin', '0155947567', 'rcahalin7@example.com', '23/01/1998', 'F', '980123180104');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0009', 'Abigale', 'Coleford', '0135858183', 'acoleford8@dion.ne.jp', '25/01/1998', 'F', '980125190106');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0010', 'Tannie', 'Mayow', '0103273361', 'tmayow9@berkeley.edu', '24/01/1996', 'F', '960124100108');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0011', 'Beniamino', 'Weddup', '0167096748', 'bweddupa@nature.com', '14/03/1998', 'M', '980314110203');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0012', 'Thaxter', 'Lackinton', '0118436437', 'tlackintonb@cnbc.com', '21/02/1998', 'M', '980221150205');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0013', 'Terry', 'Ronaghan', '0139633204', 'tronaghanc@blogspot.com', '24/01/1988', 'M', '880124160207');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0014', 'Aleece', 'Beverstock', '0194468990', 'abeverstockd@hhs.gov', '24/07/1998', 'F', '980724170202');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0015', 'Tybalt', 'Siemons', '0174695370', 'tsiemonse@booking.com', '24/08/1998', 'M', '980824180209');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0016', 'Ana', 'Budge', '0186778729', 'abudgef@irs.gov', '24/09/1996', 'F', '960924190204');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0017', 'Elissa', 'Rabjohns', '0114314768', 'erabjohnsg@comcast.net', '24/01/1988', 'F', '880124100206');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0018', 'Berrie', 'Nieass', '0196977562', 'bnieassh@mozilla.org', '10/09/1997', 'F', '970910110208');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0019', 'Amalita', 'Polhill', '0146316982', 'apolhilli@123-reg.co.uk', '12/12/1998', 'F', '981212130302');
+insert into customer (cust_id, cust_fname, cust_lname, cust_hp, cust_email, cust_dob, cust_gender, cust_ic) values ('C0020', 'Mick', 'Sipson', '0161346680', 'msipsonj@cbsnews.com', '26/03/1995', 'M', '950326140301');
+
+--pet--
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0001', 'Jillie', 'Cat', '28/09/2019', 'C0002');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0002', 'Laurianne', 'Dog', '18/01/2019', 'C0001');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0003', 'Isahella', 'Rabbit', '04/07/2018', 'C0012');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0004', 'Mechelle', 'Hamster', '01/08/2021', 'C0011');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0005', 'Louise', 'Turtle', '05/05/2018', 'C0003');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0006', 'Freemon', 'Cat', '13/12/2020', 'C0004');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0007', 'Bronson', 'Cat', '06/09/2017', 'C0005');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0008', 'Noemi', 'Hamster', '16/10/2020', 'C0006');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0009', 'Oralia', 'Turtle', '08/08/2017', 'C0007');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0010', 'Addia', 'Cat', '06/11/2020', 'C0001');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0011', 'Marianne', 'Dog', '03/08/2017', 'C0008');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0012', 'Isador', 'Turtle', '23/04/2021', 'C0009');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0013', 'Sebastiano', 'Cat', '06/05/2020', 'C0010');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0014', 'Ernesta', 'Rabbit', '07/01/2021', 'C0011');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0015', 'Vinny', 'Cat', '29/01/2020', 'C0012');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0016', 'Dollie', 'Cat', '20/07/2017', 'C0013');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0017', 'Blake', 'Cat', '26/03/2019', 'C0014');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0018', 'Remy', 'Cat', '18/05/2017', 'C0015');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0019', 'Ferdinande', 'Hamster', '21/07/2020', 'C0016');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0020', 'Simona', 'Hamster', '14/07/2021', 'C0017');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0021', 'Nolly', 'Cat', '21/08/2018', 'C0018');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0022', 'Carey', 'Turtle', '06/09/2021', 'C0019');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0023', 'Bartram', 'Rabbit', '14/11/2018', 'C0020');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0024', 'Clareta', 'Rabbit', '05/09/2021', 'C0020');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0025', 'Camel', 'Turtle', '14/03/2019', 'C0011');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0026', 'Carissa', 'Hamster', '25/07/2020', 'C0013');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0027', 'Denyse', 'Cat', '17/03/2021', 'C0001');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0028', 'Joycelin', 'Hamster', '29/06/2018', 'C0002');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0029', 'Madelin', 'Cat', '08/03/2021', 'C0005');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0030', 'Monica', 'Dog', '13/02/2019', 'C0007');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0031', 'Blanche', 'Cat', '07/03/2019', 'C0009');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0032', 'Bertram', 'Rabbit', '08/11/2019', 'C0019');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0033', 'Marne', 'Dog', '28/05/2018', 'C0020');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0034', 'Amelina', 'Turtle', '07/10/2019', 'C0004');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0035', 'Trev', 'Cat', '05/02/2021', 'C0006');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0036', 'Myrle', 'Rabbit', '14/12/2019', 'C0008');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0037', 'Norbie', 'Hamster', '19/03/2017', 'C0009');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0038', 'Prudy', 'Cat', '21/08/2017', 'C0009');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0039', 'Orelee', 'Rabbit', '26/07/2017', 'C0018');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0040', 'Guinna', 'Cat', '01/02/2019', 'C0014');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0041', 'King', 'Rabbit', '19/07/2019', 'C0013');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0042', 'Thorndike', 'Cat', '30/01/2018', 'C0012');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0043', 'Venus', 'Cat', '24/02/2020', 'C0011');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0044', 'Virginia', 'Hamster', '07/07/2019', 'C0015');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0045', 'Ruggiero', 'Rabbit', '19/06/2021', 'C0011');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0046', 'Edmund', 'Dog', '15/12/2021', 'C0019');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0047', 'Ewart', 'Dog', '12/04/2021', 'C0020');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0048', 'Tommie', 'Cat', '28/02/2020', 'C0017');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0049', 'Edgardo', 'Cat', '29/09/2021', 'C0018');
+insert into pet (pet_id, pet_name, pet_species, pet_born_year, cust_id) values ('D0050', 'Vaclav', 'Dog', '17/02/2018', 'C0019');
+
+--payment--
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0001', 3874.95, '31-12-2019', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0002', 4713.61, '19-09-2020', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0003', 6206.99, '17-07-2020', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0004', 2306.79, '10-04-2019', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0005', 7908.45, '26-04-2019', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0006', 2524.48, '30-11-2019', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0007', 6545.33, '11-09-2020', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0008', 2995.85, '29-03-2020', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0009', 8346.2, '28-05-2022', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0010', 5021.69, '08-04-2021', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0011', 4007.6, '06-02-2020', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0012', 8006.78, '04-07-2022', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0013', 7359.57, '10-12-2019', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0014', 5431.58, '15-02-2020', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0015', 8374.9, '28-05-2020', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0016', 4184.36, '22-03-2020', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0017', 6156.48, '30-07-2019', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0018', 2967.64, '05-01-2021', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0019', 6249.41, '18-08-2019', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0020', 8708.81, '15-05-2022', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0021', 2436.8, '11-08-2022', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0022', 5806.41, '11-07-2019', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0023', 6388.61, '16-02-2020', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0024', 6540.56, '27-08-2020', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0025', 3670.3, '18-08-2019', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0026', 4396.52, '25-03-2022', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0027', 8512.74, '22-11-2021', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0028', 8743.6, '20-04-2022', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0029', 4501.51, '25-10-2020', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0030', 3977.34, '02-03-2021', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0031', 7520.77, '24-06-2019', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0032', 7660.49, '12-06-2020', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0033', 7650.09, '23-04-2019', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0034', 6011.74, '16-12-2019', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0035', 4646.9, '02-04-2022', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0036', 2886.35, '20-03-2021', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0037', 2231.36, '29-08-2022', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0038', 4422.72, '05-09-2021', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0039', 2819.86, '08-11-2021', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0040', 4909.03, '17-04-2020', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0041', 2671.62, '25-08-2022', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0042', 6272.56, '25-12-2020', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0043', 8669.86, '31-03-2022', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0044', 3418.24, '20-06-2019', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0045', 3945.29, '18-10-2019', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0046', 6956.42, '11-03-2022', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0047', 6229.51, '16-11-2019', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0048', 6108.53, '17-02-2021', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0049', 4447.67, '04-08-2019', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0050', 6991.65, '31-10-2020', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0051', 7199.04, '27-07-2020', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0052', 2430.85, '12-12-2020', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0053', 3398.09, '16-05-2021', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0054', 7450.63, '19-07-2021', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0055', 4161.46, '13-06-2019', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0056', 2257.02, '27-02-2021', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0057', 4832.47, '17-08-2022', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0058', 7011.75, '03-02-2022', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0059', 2506.07, '26-10-2019', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0060', 4157.88, '14-10-2019', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0061', 2546.09, '23-08-2021', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0062', 4278.45, '22-09-2019', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0063', 4109.57, '26-02-2020', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0064', 5460.67, '06-09-2019', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0065', 5177.41, '10-09-2019', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0066', 1977.27, '23-09-2021', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0067', 3288.43, '15-08-2022', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0068', 8094.2, '15-05-2020', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0069', 8044.45, '20-07-2021', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0070', 1859.57, '12-07-2022', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0071', 5732.59, '04-01-2022', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0072', 4272.62, '21-01-2022', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0073', 3926.25, '15-10-2020', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0074', 2228.09, '07-08-2022', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0075', 4026.82, '01-05-2020', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0076', 8317.04, '11-11-2019', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0077', 3579.07, '28-08-2022', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0078', 5598.51, '13-11-2019', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0079', 7489.53, '03-07-2022', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0080', 7580.62, '07-11-2021', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0081', 2541.16, '07-07-2021', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0082', 7462.19, '26-11-2021', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0083', 4602.85, '10-03-2022', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0084', 8645.51, '21-10-2021', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0085', 7899.48, '25-07-2021', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0086', 2833.96, '06-05-2020', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0087', 5437.6, '08-06-2019', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0088', 4946.35, '04-05-2021', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0089', 4558.14, '27-06-2021', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0090', 1754.62, '10-12-2019', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0091', 8143.03, '12-02-2019', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0092', 2549.56, '11-05-2022', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0093', 3049.12, '02-01-2019', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0094', 4074.07, '25-11-2020', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0095', 6283.36, '26-09-2019', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0096', 7951.91, '30-06-2021', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0097', 7414.09, '03-06-2020', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0098', 5589.45, '13-07-2021', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0099', 3792.54, '08-08-2021', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0100', 5005.91, '10-01-2019', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0101', 3865.97, '14-02-2019', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0102', 4194.06, '20-02-2020', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0103', 3900.83, '23-10-2019', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0104', 2246.63, '22-11-2021', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0105', 2932.46, '26-02-2020', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0106', 4461.25, '14-11-2020', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0107', 5121.77, '19-11-2019', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0108', 7915.7, '13-08-2021', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0109', 2395.38, '23-02-2022', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0110', 7818.87, '05-03-2019', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0111', 6469.03, '22-01-2020', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0112', 3118.89, '11-11-2020', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0113', 7966.18, '20-08-2020', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0114', 4085.91, '07-08-2020', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0115', 7203.46, '10-05-2019', 'Online Banking');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0116', 5447.38, '12-06-2021', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0117', 7461.15, '25-06-2020', 'E-Wallet');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0118', 4721.43 ,'18-01-2021', 'Credit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0119', 7057.11,'05-02-2020', 'Debit Card');
+insert into payment (payment_id, payment_amount, payment_date, payment_type) values ('P0120', 7336.55,'14-03-2021', 'E-Wallet');
+
+
+--appointment--
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0001','30-01-2019 23:51:50','Done','D0033','P0001');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0002','31-01-2019 12:44:33','Done','D0050','P0002');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0003','08-02-2019 07:36:13','Done','D0037','P0003');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0004','15-02-2019 22:07:02','Done','D0047','P0004');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0005','20-02-2019 15:37:50','Done','D0037','P0005');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0006','28-02-2019 08:16:34','Done','D0014','P0006');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0007','14-03-2019 22:03:00','Done','D0014','P0007');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0008','26-03-2019 05:44:29','Done','D0023','P0008');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0009','04-04-2019 01:24:32','Done','D0045','P0009');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0010','01-06-2019 22:23:47','Done','D0032','P0010');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0011','10-06-2019 01:56:16','Done','D0002','P0011');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0012','21-06-2019 22:46:52','Done','D0010','P0012');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0013','28-07-2019 01:29:30','Done','D0016','P0013');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0014','29-07-2019 04:06:47','Done','D0047','P0014');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0015','08-08-2019 20:55:04','Done','D0010','P0015');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0016','13-08-2019 07:51:51','Done','D0030','P0016');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0017','13-08-2019 11:38:08','Done','D0003','P0017');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0018','20-09-2019 04:14:45','Done','D0019','P0018');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0019','21-09-2019 23:13:09','Done','D0050','P0019');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0020','25-09-2019 12:53:39','Done','D0037','P0020');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0021','03-10-2019 21:31:23','Done','D0038','P0021');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0022','11-10-2019 08:17:12','Done','D0020','P0022');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0023','21-10-2019 16:06:00','Done','D0018','P0023');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0024','25-10-2019 12:03:24','Done','D0045','P0024');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0025','01-11-2019 16:51:41','Done','D0030','P0025');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0026','13-11-2019 02:34:17','Done','D0042','P0026');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0027','25-11-2019 13:30:18','Done','D0007','P0027');
+
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0028','01-02-2020 18:16:44','Done','D0029','P0028');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0029','08-02-2020 22:53:02','Done','D0005','P0029');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0030','03-03-2020 19:38:21','Done','D0042','P0030');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0031','07-03-2020 16:21:55','Done','D0024','P0031');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0032','28-03-2020 02:18:35','Done','D0025','P0032');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0033','31-03-2020 00:56:34','Done','D0019','P0033');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0034','31-03-2020 14:55:43','Done','D0005','P0034');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0035','04-04-2020 18:32:00','Done','D0004','P0035');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0036','12-06-2020 10:12:30','Done','D0043','P0036');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0037','26-06-2020 04:52:57','Done','D0048','P0037');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0038','08-07-2020 21:26:04','Done','D0022','P0038');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0039','13-07-2020 04:00:20','Done','D0047','P0039');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0040','08-08-2020 02:48:38','Done','D0012','P0040');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0041','06-09-2020 03:31:08','Done','D0011','P0041');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0042','06-09-2020 04:13:36','Done','D0020','P0042');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0043','10-09-2020 04:07:22','Done','D0034','P0043');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0044','15-09-2020 01:06:38','Done','D0003','P0044');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0045','16-09-2020 20:04:48','Done','D0006','P0045');
+
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0046','21-04-2021 17:01:13','Done','D0041','P0046');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0047','23-04-2021 08:57:02','Done','D0006','P0047');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0048','28-04-2021 14:48:14','Done','D0010','P0048');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0049','01-05-2021 20:32:40','Done','D0040','P0049');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0050','04-05-2021 20:13:50','Done','D0030','P0050');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0051','07-05-2021 15:09:10','Done','D0003','P0051');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0052','11-05-2021 00:56:02','Done','D0028','P0052');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0053','15-05-2021 18:48:47','Done','D0046','P0053');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0054','12-06-2021 22:34:29','Done','D0011','P0054');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0055','15-06-2021 13:12:30','Done','D0026','P0055');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0056','19-06-2021 22:45:21','Done','D0014','P0056');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0057','21-06-2021 09:17:14','Done','D0008','P0057');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0058','23-06-2021 06:08:28','Done','D0020','P0058');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0059','29-06-2021 07:51:59','Done','D0005','P0059');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0060','02-07-2021 01:44:16','Done','D0003','P0060');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0061','25-07-2021 10:15:21','Done','D0043','P0061');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0062','28-07-2021 07:04:27','Done','D0039','P0062');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0063','31-07-2021 05:51:24','Done','D0029','P0063');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0064','08-08-2021 21:27:42','Done','D0017','P0064');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0065','07-09-2021 00:59:24','Done','D0037','P0065');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0066','07-09-2021 08:31:38','Done','D0026','P0066');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0067','08-09-2021 17:17:26','Done','D0050','P0067');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0068','13-09-2021 15:53:02','Done','D0024','P0068');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0069','15-09-2021 02:31:57','Done','D0048','P0069');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0070','20-09-2021 06:08:38','Done','D0001','P0070');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0071','21-09-2021 18:52:48','Done','D0028','P0071');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0072','23-09-2021 10:30:38','Done','D0022','P0072');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0073','26-09-2021 22:25:28','Done','D0003','P0073');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0074','27-09-2021 05:21:03','Done','D0015','P0074');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0075','30-09-2021 19:56:21','Done','D0041','P0075');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0076','03-10-2021 12:27:28','Done','D0034','P0076');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0077','07-11-2021 04:10:57','Done','D0039','P0077');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0078','07-11-2021 06:04:39','Done','D0028','P0078');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0079','07-11-2021 13:49:58','Done','D0004','P0079');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0080','08-11-2021 20:28:20','Done','D0013','P0080');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0081','13-11-2021 13:24:45','Done','D0043','P0081');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0082','14-11-2021 05:09:38','Done','D0044','P0082');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0083','14-11-2021 18:08:18','Done','D0045','P0083');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0084','15-11-2021 22:42:56','Done','D0017','P0084');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0085','16-11-2021 02:38:15','Done','D0023','P0085');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0086','20-11-2021 12:15:14','Done','D0008','P0086');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0087','21-11-2021 20:01:05','Done','D0005','P0087');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0088','23-11-2021 15:35:24','Done','D0042','P0088');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0089','24-11-2021 07:25:13','Done','D0036','P0089');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0090','24-11-2021 21:22:05','Done','D0004','P0090');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0091','25-11-2021 06:55:22','Done','D0004','P0091');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0092','25-11-2021 12:50:58','Done','D0047','P0092');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0093','27-11-2021 14:23:16','Done','D0019','P0093');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0094','28-11-2021 05:08:48','Done','D0040','P0094');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0095','02-12-2021 14:52:29','Done','D0006','P0095');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0096','03-12-2021 16:25:08','Done','D0032','P0096');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0097','09-12-2021 12:59:44','Done','D0024','P0097');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0098','19-12-2021 12:35:50','Done','D0007','P0098');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0099','28-12-2021 00:11:06','Done','D0038','P0099');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0100','28-12-2021 20:45:50','Done','D0025','P0100');
+
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0101','01-01-2022 15:37:00','Done','D0019','P0101');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0102','02-01-2022 20:22:58','Done','D0048','P0102');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0103','08-01-2022 13:12:10','Done','D0013','P0103');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0104','14-01-2022 01:43:25','Done','D0020','P0104');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0105','09-02-2022 14:21:49','Done','D0032','P0105');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0106','15-02-2022 20:18:15','Done','D0010','P0106');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0107','17-02-2022 02:06:57','Done','D0001','P0107');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0108','18-02-2022 10:38:51','Done','D0024','P0108');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0109','21-02-2022 16:09:30','Done','D0024','P0109');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0110','04-03-2022 00:05:13','Done','D0022','P0110');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0111','15-03-2022 00:01:19','Done','D0041','P0111');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0112','25-03-2022 23:52:49','Done','D0044','P0112');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0113','06-04-2022 16:33:10','Done','D0016','P0113');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0114','08-04-2022 18:17:46','Done','D0002','P0114');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0115','21-04-2022 11:08:21','Done','D0018','P0115');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0116','13-05-2022 12:58:24','Done','D0033','P0116');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0117','15-05-2022 20:49:59','Done','D0048','P0117');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0118','18-05-2022 07:27:33','Done','D0029','P0118');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0119','09-06-2022 01:07:49','Done','D0046','P0119');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0120','11-06-2022 01:56:41','Done','D0010','P0120');
+
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0121','01-07-2022 09:51:48','Pending','D0004','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0122','14-07-2022 18:34:58','Pending','D0035','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0123','16-07-2022 03:14:43','Pending','D0031','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0124','17-07-2022 21:56:59','Pending','D0022','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0125','19-07-2022 04:36:59','Pending','D0027','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0126','19-07-2022 05:27:15','Pending','D0043','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0127','20-07-2022 13:18:05','Pending','D0004','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0128','21-07-2022 02:49:28','Pending','D0050','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0129','21-07-2022 16:22:48','Pending','D0004','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0130','22-07-2022 08:09:41','Pending','D0006','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0131','05-08-2022 11:47:59','Pending','D0003','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0132','06-08-2022 18:47:05','Pending','D0025','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0133','08-08-2022 08:31:35','Pending','D0001','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0134','08-08-2022 16:23:43','Pending','D0030','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0135','11-08-2022 09:13:58','Pending','D0041','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0136','12-08-2022 17:11:03','Pending','D0003','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0137','13-08-2022 08:56:14','Pending','D0041','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0138','15-08-2022 00:40:43','Pending','D0046','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0139','15-08-2022 22:10:49','Pending','D0016','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0140','17-08-2022 03:50:20','Pending','D0037','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0141','18-08-2022 16:36:07','Pending','D0001','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0142','24-08-2022 08:09:35','Pending','D0032','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0143','25-08-2022 16:49:46','Pending','D0048','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0144','26-08-2022 17:47:35','Pending','D0002','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0145','28-08-2022 16:20:06','Pending','D0010','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0146','29-08-2022 09:07:44','Pending','D0025','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0147','29-08-2022 14:47:19','Pending','D0027','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0148','30-08-2022 09:20:47','Pending','D0028','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0149','30-08-2022 20:06:55','Pending','D0042','');
+insert into appointment (appointment_id, appointment_datetime, appointment_status, pet_id, payment_id) values('A0150','31-08-2022 06:54:42','Pending','D0030','');
+
+--treatment--
+insert into treatment (treatment_id, treatment_name, treatment_desc, treatment_cost, treatment_price) values ('T0001', 'Physical Examinations', 'Check the pets health status.', 4706.00, 5206.00);
+insert into treatment (treatment_id, treatment_name, treatment_desc, treatment_cost, treatment_price) values ('T0002', 'Lab Testing', 'Testing the pets health in the lab.', 8281.00, 8781.00);
+insert into treatment (treatment_id, treatment_name, treatment_desc, treatment_cost, treatment_price) values ('T0003', 'Vaccinations', 'Giving vaccination to the pet.', 5139.00, 5639.00);
+insert into treatment (treatment_id, treatment_name, treatment_desc, treatment_cost, treatment_price) values ('T0004', 'Parasite Prevention', 'Permethrin and Pyriproxyfen.', 7322.00, 7822.00);
+insert into treatment (treatment_id, treatment_name, treatment_desc, treatment_cost, treatment_price) values ('T0005', 'Behavioral Counseling', 'Skills, obedience, agility, walking.', 1468.00, 1968.00);
+insert into treatment (treatment_id, treatment_name, treatment_desc, treatment_cost, treatment_price) values ('T0006', 'Diet and Nutrition', 'Kirkland Pet Foods.', 8365.00, 8865.00);
+insert into treatment (treatment_id, treatment_name, treatment_desc, treatment_cost, treatment_price) values ('T0007', 'Dental Health', 'Brush, Nibble, Spritz.', 2530.00, 3030.00);
+insert into treatment (treatment_id, treatment_name, treatment_desc, treatment_cost, treatment_price) values ('T0008', 'Cleaning', 'Check for Hygiene, then shower the dog.', 2404.00, 2904.00);
+insert into treatment (treatment_id, treatment_name, treatment_desc, treatment_cost, treatment_price) values ('T0009', 'Diagnostic Testing', 'Lab Test and Physical Exams.', 1250.00, 1750.00);
+insert into treatment (treatment_id, treatment_name, treatment_desc, treatment_cost, treatment_price) values ('T0010', 'Rehabilitation', 'Physical Examinations and Behavioral Counseling', 8012.00, 8512.00);
+
+--veterinarian--
+insert into veterinarian (veterinarian_id, veterinarian_name, veterinarian_ic, veterinarian_salary , veterinarian_email, veterinarian_tel, veterinarian_working_hours, veterinarian_status) values ('V0001', 'Mollie', '881114020467', 2000.00, 'mnorthover0@virginia.edu', '0172428582', 5, 'Active');
+insert into veterinarian (veterinarian_id, veterinarian_name, veterinarian_ic, veterinarian_salary , veterinarian_email, veterinarian_tel, veterinarian_working_hours, veterinarian_status) values ('V0002', 'Zarah', '961214020468', 5000.00, 'zlenton1@merriam-webster.com', '0143095433', 8, 'Active');
+insert into veterinarian (veterinarian_id, veterinarian_name, veterinarian_ic, veterinarian_salary , veterinarian_email, veterinarian_tel, veterinarian_working_hours, veterinarian_status) values ('V0003', 'Willie', '960814020462', 4000.00, 'wtuff2@wikia.com', '0154032838', 8, 'Active');
+insert into veterinarian (veterinarian_id, veterinarian_name, veterinarian_ic, veterinarian_salary , veterinarian_email, veterinarian_tel, veterinarian_working_hours, veterinarian_status) values ('V0004', 'Hurley', '950914020465', 6000.00, 'hcoche3@umn.edu', '0145402055', 10, 'Active');
+insert into veterinarian (veterinarian_id, veterinarian_name, veterinarian_ic, veterinarian_salary , veterinarian_email, veterinarian_tel, veterinarian_working_hours, veterinarian_status) values ('V0005', 'Daveta', '951114020466', 8000.00, 'dmathew4@ovh.net', '0129093174', 10, 'Active');
+insert into veterinarian (veterinarian_id, veterinarian_name, veterinarian_ic, veterinarian_salary , veterinarian_email, veterinarian_tel, veterinarian_working_hours, veterinarian_status) values ('V0006', 'Thom', '011114020464', 4000.00, 'tsaffer5@nsw.gov.au', '0126442212', 5, 'Inactive');
+insert into veterinarian (veterinarian_id, veterinarian_name, veterinarian_ic, veterinarian_salary , veterinarian_email, veterinarian_tel, veterinarian_working_hours, veterinarian_status) values ('V0007', 'Darryl', '010414020358', 5000.00, 'dkeese6@opera.com', '0153573342', 10, 'Inactive');
+insert into veterinarian (veterinarian_id, veterinarian_name, veterinarian_ic, veterinarian_salary , veterinarian_email, veterinarian_tel, veterinarian_working_hours, veterinarian_status) values ('V0008', 'Dougie', '000414020265', 2000.00, 'drome7@cloudflare.com', '0121970655', 10, 'Active');
+insert into veterinarian (veterinarian_id, veterinarian_name, veterinarian_ic, veterinarian_salary , veterinarian_email, veterinarian_tel, veterinarian_working_hours, veterinarian_status) values ('V0009', 'Ardine', '010414020125', 6000.00, 'ascone8@intel.com', '0103483350', 10, 'Active');
+insert into veterinarian (veterinarian_id, veterinarian_name, veterinarian_ic, veterinarian_salary , veterinarian_email, veterinarian_tel, veterinarian_working_hours, veterinarian_status) values ('V0010', 'Thacher', '980414020135', 8000.00, 'twillavoys9@sakura.ne.jp', '0195394981', 10, 'Inactive');
+insert into veterinarian (veterinarian_id, veterinarian_name, veterinarian_ic, veterinarian_salary , veterinarian_email, veterinarian_tel, veterinarian_working_hours, veterinarian_status) values ('V0011', 'Neile', '990214020354', 5000.00, 'nwimmera@youtube.com', '0143128215', 8, 'Inactive');
+insert into veterinarian (veterinarian_id, veterinarian_name, veterinarian_ic, veterinarian_salary , veterinarian_email, veterinarian_tel, veterinarian_working_hours, veterinarian_status) values ('V0012', 'Lorens', '010314020564', 6000.00, 'lfowleyb@hud.gov', '0115141396', 10, 'Active');
+insert into veterinarian (veterinarian_id, veterinarian_name, veterinarian_ic, veterinarian_salary , veterinarian_email, veterinarian_tel, veterinarian_working_hours, veterinarian_status) values ('V0013', 'Giustina', '980614020825', 2000.00, 'gboddisc@fastcompany.com', '0183719182', 8, 'Active');
+insert into veterinarian (veterinarian_id, veterinarian_name, veterinarian_ic, veterinarian_salary , veterinarian_email, veterinarian_tel, veterinarian_working_hours, veterinarian_status) values ('V0014', 'Batsheva', '010414020865', 5000.00, 'bstilemand@storify.com', '0168540161', 10, 'Active');
+insert into veterinarian (veterinarian_id, veterinarian_name, veterinarian_ic, veterinarian_salary , veterinarian_email, veterinarian_tel, veterinarian_working_hours, veterinarian_status) values ('V0015', 'Delilah', '910414020456', 6000.00, 'dshepstonee@hugedomains.com', '0132794094', 10, 'Active');
+
+--cage--
+insert into cage (cage_id, cage_row, cage_column) values ('E0001', 1, 1);
+insert into cage (cage_id, cage_row, cage_column) values ('E0002', 1, 2);
+insert into cage (cage_id, cage_row, cage_column) values ('E0003', 1, 3);
+insert into cage (cage_id, cage_row, cage_column) values ('E0004', 1, 4);
+insert into cage (cage_id, cage_row, cage_column) values ('E0005', 1, 5);
+insert into cage (cage_id, cage_row, cage_column) values ('E0006', 1, 6);
+insert into cage (cage_id, cage_row, cage_column) values ('E0007', 1, 7);
+insert into cage (cage_id, cage_row, cage_column) values ('E0008', 1, 8);
+insert into cage (cage_id, cage_row, cage_column) values ('E0009', 1, 9);
+insert into cage (cage_id, cage_row, cage_column) values ('E0010', 1, 10);
+insert into cage (cage_id, cage_row, cage_column) values ('E0011', 2, 1);
+insert into cage (cage_id, cage_row, cage_column) values ('E0012', 2, 2);
+insert into cage (cage_id, cage_row, cage_column) values ('E0013', 2, 3);
+insert into cage (cage_id, cage_row, cage_column) values ('E0014', 2, 4);
+insert into cage (cage_id, cage_row, cage_column) values ('E0015', 2, 5);
+insert into cage (cage_id, cage_row, cage_column) values ('E0016', 2, 6);
+insert into cage (cage_id, cage_row, cage_column) values ('E0017', 2, 7);
+insert into cage (cage_id, cage_row, cage_column) values ('E0018', 2, 8);
+insert into cage (cage_id, cage_row, cage_column) values ('E0019', 2, 9);
+insert into cage (cage_id, cage_row, cage_column) values ('E0020', 2, 10);
+
+--medicine--
+insert into medicine (medicine_ID, medicine_name, medicine_desc,medicine_qty, medicine_cost, medicine_price) values ('M0001', 'acepromazine', 'sedative, tranquilizer, and antiemetic', 233,  23.56, '28.27');
+insert into medicine (medicine_ID, medicine_name, medicine_desc,medicine_qty,  medicine_cost, medicine_price) values ('M0002', 'albendazole', ' antihelminthic', 463, 23.75, '28.50');
+insert into medicine (medicine_ID, medicine_name, medicine_desc,medicine_qty,  medicine_cost, medicine_price) values ('M0003', 'benazepril', 'ACE-inhibitor used in heart failure, hypertension, chronic kidney failure and protein-losing nephropathy',452, 18.67, '22.40');
+insert into medicine (medicine_ID, medicine_name, medicine_desc, medicine_qty,  medicine_cost, medicine_price) values ('M0004', 'bethanechol', 'stimulates bladder contractions, tranquilizer, makes the patient feel no pain',783, 14.9, '17.88');
+insert into medicine (medicine_ID, medicine_name, medicine_desc, medicine_qty,  medicine_cost, medicine_price) values ('M0005', 'carprofen', 'COX-2 selective NSAID used to relieve pain and inflammation in dogs and cats',224, 2.59, '3.11');
+insert into medicine (medicine_ID, medicine_name, medicine_desc, medicine_qty,  medicine_cost, medicine_price) values ('M0006', 'cephalexin', 'antibiotic, particularly useful for susceptible Staphylococcus infections',0, 4.28, '5.14');
+insert into medicine (medicine_ID, medicine_name, medicine_desc, medicine_qty,  medicine_cost, medicine_price) values ('M0007', 'deracoxib', '(NSAID) nonsteroidal anti-inflammatory drug', 357, 10.41, '12.49');
+insert into medicine (medicine_ID, medicine_name, medicine_desc, medicine_qty, medicine_cost, medicine_price) values ('M0008', 'dexamethasone', 'anti-inflammatory steroid',215, 14.54, '17.45');
+insert into medicine (medicine_ID, medicine_name, medicine_desc, medicine_qty,  medicine_cost, medicine_price) values ('M0009', 'enalapril', 'ACE-inhibitor used to treat high blood pressure and heart failure',30, 25.16, '30.19');
+insert into medicine (medicine_ID, medicine_name, medicine_desc, medicine_qty,  medicine_cost, medicine_price) values ('M0010', 'enrofloxacin', 'Broad spectrum antibiotic (Gram-positive and -negative) -- not recommended for streptococci, or anaerobic bacteria',83, 9.54, '11.45');
+insert into medicine (medicine_ID, medicine_name, medicine_desc, medicine_qty, medicine_cost, medicine_price) values ('M0011', 'fenbendazole', 'antiparasiticide',37, 9.2, '11.04');
+insert into medicine (medicine_ID, medicine_name, medicine_desc, medicine_qty, medicine_cost, medicine_price) values ('M0012', 'fipronil', 'Cyrtandra ×georgiana Forbes (pro sp.)',9711, 19.65, '23.58');
+insert into medicine (medicine_ID, medicine_name, medicine_desc, medicine_qty, medicine_cost, medicine_price) values ('M0013', 'gabapentin', 'strong pain reliever',657, 2.64, '3.17');
+insert into medicine (medicine_ID, medicine_name, medicine_desc, medicine_qty, medicine_cost, medicine_price) values ('M0014', 'marbofloxacin', 'antibiotic',679, 21.85, '26.22');
+insert into medicine (medicine_ID, medicine_name, medicine_desc, medicine_qty, medicine_cost, medicine_price) values ('M0015', 'maropitant', 'antiemetic',655, 13.89, '16.67');
+insert into medicine (medicine_ID, medicine_name, medicine_desc, medicine_qty, medicine_cost, medicine_price) values ('M0016', 'oclacitinib', 'antipruritic',371, 13.87, '16.64');
+insert into medicine (medicine_ID, medicine_name, medicine_desc, medicine_qty, medicine_cost, medicine_price) values ('M0017', 'rafoxanide', 'parasiticide',433, 23.0, '27.60');
+insert into medicine (medicine_ID, medicine_name, medicine_desc, medicine_qty, medicine_cost, medicine_price) values ('M0018', 'selamectin', 'antiparasitic treating fleas, roundworms, ear mites, heartworm, and hookworms',829, 17.44, '20.93');
+insert into medicine (medicine_ID, medicine_name, medicine_desc, medicine_qty, medicine_cost, medicine_price) values ('M0019', 'Telazol', 'intravenous drug used to induce anesthesia; combination of tiletamine and zolazepam',857, 28.12, '33.74');
+insert into medicine (medicine_ID, medicine_name, medicine_desc, medicine_qty, medicine_cost, medicine_price) values ('M0020', 'yohimbine', 'used to reverse effects of xylazine, also called an "antidote" to xylazine',923, 13.61, '16.33');
+
+--supplier--
+insert into supplier (supplier_id, supplier_name, supplier_businessid, supplier_contactno, supplier_email) values ('S0001', 'Meejo', '8059411013', '0137231359', 'aaudrey0@umn.edu');
+insert into supplier (supplier_id, supplier_name, supplier_businessid, supplier_contactno, supplier_email) values ('S0002', 'Fatz', '5291639710', '0117996548', 'coclovan1@state.tx.us');
+insert into supplier (supplier_id, supplier_name, supplier_businessid, supplier_contactno, supplier_email) values ('S0003', 'Photobug', '5400623396', '0177267311', 'mlangfat2@alexa.com');
+insert into supplier (supplier_id, supplier_name, supplier_businessid, supplier_contactno, supplier_email) values ('S0004', 'Voolia', '7361301375', '0162690832', 'gredon3@indiegogo.com');
+insert into supplier (supplier_id, supplier_name, supplier_businessid, supplier_contactno, supplier_email) values ('S0005', 'Wikizz', '0288352548', '0113597903', 'gmauser4@opensource.org');
+insert into supplier (supplier_id, supplier_name, supplier_businessid, supplier_contactno, supplier_email) values ('S0006', 'Fivespan', '4568143475', '0186857474', 'btrinder5@sakura.ne.jp');
+insert into supplier (supplier_id, supplier_name, supplier_businessid, supplier_contactno, supplier_email) values ('S0007', 'Midel', '8703717164', '0153266247', 'hpoizer6@eventbrite.com');
+insert into supplier (supplier_id, supplier_name, supplier_businessid, supplier_contactno, supplier_email) values ('S0008', 'Topicshots', '0868504631', '0138878053', 'kcrevagh7@symantec.com');
+insert into supplier (supplier_id, supplier_name, supplier_businessid, supplier_contactno, supplier_email) values ('S0009', 'Abatz', '0443405771', '0171766252', 'tlitzmann8@google.de');
+insert into supplier (supplier_id, supplier_name, supplier_businessid, supplier_contactno, supplier_email) values ('S0010', 'Oloo', '2345863996', '0169922821', 'aleipoldt9@senate.gov');
+
+--supplier_details--
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '23-02-2019', '05-03-2019', 22);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '07-12-2021', '22-12-2021', 486);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '21-05-2020', '01-06-2020', 335);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '12-07-2021', '05-08-2021', 294);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '12-08-2020', '14-08-2020', 106);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0012', '11-03-2021', '05-04-2021', 213);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '25-10-2021', '02-11-2021', 184);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0003', '26-03-2019', '17-04-2019', 308);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0002', '04-10-2019', '30-10-2019', 378);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0009', '23-04-2019', '08-05-2019', 286);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0020', '22-03-2020', '17-04-2020', 213);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '14-09-2019', '18-09-2019', 278);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '22-04-2022', '06-05-2022', 276);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0004', '24-01-2021', '17-02-2021', 407);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '12-10-2021', '08-11-2021', 74);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0012', '18-01-2020', '27-01-2020', 29);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '23-05-2021', '14-06-2021', 131);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '23-02-2019', '08-03-2019', 474);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '15-07-2019', '31-07-2019', 258);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '28-01-2022', '11-02-2022', 378);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '26-09-2021', '21-10-2021', 365);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0019', '06-09-2020', '15-09-2020', 202);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '27-08-2020', '22-09-2020', 497);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '07-02-2020', '01-03-2020', 152);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0020', '27-08-2019', '02-09-2019', 282);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '25-05-2022', '20-06-2022', 308);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '10-12-2019', '03-01-2020', 293);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '29-02-2020', '22-03-2020', 404);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0006', '20-06-2019', '20-07-2019', 191);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '09-04-2022', '30-04-2022', 71);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0003', '22-11-2020', '20-12-2020', 444);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '19-06-2019', '13-07-2019', 62);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0020', '14-10-2021', '23-10-2021', 178);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '25-10-2019', '15-11-2019', 148);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0019', '12-10-2019', '22-10-2019', 219);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0003', '31-12-2019', '25-01-2020', 461);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0007', '02-05-2019', '28-05-2019', 105);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '03-04-2022', '10-04-2022', 481);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '14-12-2020', '03-01-2021', 204);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '25-09-2021', '11-10-2021', 200);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '03-07-2022', '28-07-2022', 382);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '15-02-2019', '20-02-2019', 198);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '03-06-2020', '19-06-2020', 301);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0013', '07-05-2021', '04-06-2021', 364);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0012', '29-01-2019', '04-02-2019', 448);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '08-07-2021', '07-08-2021', 210);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '16-09-2020', '21-09-2020', 348);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '26-09-2020', '08-10-2020', 250);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '04-05-2022', '02-06-2022', 67);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '11-06-2019', '18-06-2019', 158);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '28-12-2019', '14-01-2020', 411);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0019', '05-03-2021', '23-03-2021', 108);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '24-06-2022', '23-07-2022', 387);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '14-01-2022', '08-02-2022', 374);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0008', '22-03-2019', '27-03-2019', 90);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '13-07-2020', '06-08-2020', 250);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '21-11-2020', '02-12-2020', 188);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0020', '22-01-2020', '08-02-2020', 202);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0019', '10-06-2022', '26-06-2022', 386);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '07-05-2020', '26-05-2020', 78);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0019', '07-03-2022', '17-03-2022', 82);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0011', '09-01-2020', '20-01-2020', 406);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '23-04-2022', '21-05-2022', 24);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '24-06-2021', '06-07-2021', 74);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '28-06-2019', '20-07-2019', 203);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '16-06-2022', '01-07-2022', 167);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0007', '28-04-2021', '09-05-2021', 82);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '19-03-2022', '30-03-2022', 433);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '19-02-2021', '10-03-2021', 219);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0013', '02-08-2022', '18-08-2022', 151);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '19-04-2022', '24-04-2022', 45);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0014', '05-12-2021', '02-01-2022', 492);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '29-01-2019', '17-02-2019', 277);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0020', '15-03-2021', '21-03-2021', 322);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '23-03-2020', '20-04-2020', 195);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '06-04-2020', '19-04-2020', 136);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0006', '10-12-2021', '27-12-2021', 359);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '22-10-2019', '17-11-2019', 190);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '19-01-2022', '03-02-2022', 284);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '18-10-2020', '06-11-2020', 58);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0008', '04-12-2020', '20-12-2020', 457);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0004', '03-09-2021', '05-09-2021', 321);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '06-10-2020', '13-10-2020', 58);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '04-06-2019', '03-07-2019', 347);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0020', '03-07-2022', '09-07-2022', 112);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0005', '07-05-2019', '28-05-2019', 76);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '25-06-2020', '13-07-2020', 98);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '10-05-2022', '23-05-2022', 289);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '15-07-2021', '17-07-2021', 154);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0020', '28-10-2021', '14-11-2021', 123);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '09-08-2020', '29-08-2020', 482);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '05-08-2019', '04-09-2019', 482);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '10-02-2022', '13-02-2022', 468);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '20-01-2022', '30-01-2022', 416);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0002', '14-10-2020', '30-10-2020', 471);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0009', '27-06-2022', '18-07-2022', 497);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0004', '09-12-2021', '06-01-2022', 413);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0005', '18-03-2020', '13-04-2020', 32);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '09-02-2022', '13-02-2022', 184);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '22-03-2021', '30-03-2021', 244);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '22-10-2021', '04-11-2021', 154);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0019', '22-05-2019', '15-06-2019', 330);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '04-11-2019', '23-11-2019', 90);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0012', '13-09-2019', '25-09-2019', 413);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0013', '24-04-2021', '16-05-2021', 245);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '23-06-2021', '15-07-2021', 345);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '14-01-2019', '29-01-2019', 328);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '06-05-2022', '18-05-2022', 46);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0020', '04-08-2021', '10-08-2021', 244);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '04-05-2021', '30-05-2021', 21);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '01-05-2022', '05-05-2022', 494);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '22-09-2021', '09-10-2021', 164);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0009', '28-11-2021', '11-12-2021', 237);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0002', '10-12-2021', '26-12-2021', 417);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0012', '30-06-2020', '15-07-2020', 268);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '18-12-2019', '30-12-2019', 292);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '02-08-2019', '04-08-2019', 174);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0008', '12-06-2019', '28-06-2019', 109);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0004', '15-04-2019', '06-05-2019', 415);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '07-04-2022', '02-05-2022', 264);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0004', '21-06-2019', '27-06-2019', 378);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '05-08-2019', '19-08-2019', 304);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0002', '03-02-2020', '02-03-2020', 345);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0002', '20-01-2021', '02-02-2021', 271);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '28-06-2022', '10-07-2022', 134);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '20-02-2022', '07-03-2022', 282);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '26-02-2019', '26-03-2019', 448);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '09-08-2022', '', 68);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0005', '08-05-2021', '05-06-2021', 384);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0009', '16-03-2021', '20-03-2021', 446);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '11-08-2021', '21-08-2021', 263);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '28-08-2022', '', 442);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0014', '23-10-2021', '19-11-2021', 70);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '14-02-2021', '03-03-2021', 372);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0002', '07-08-2021', '25-08-2021', 131);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0014', '21-02-2021', '06-03-2021', 204);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '25-08-2020', '24-09-2020', 244);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '02-01-2020', '18-01-2020', 355);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '03-07-2022', '29-07-2022', 214);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '04-04-2020', '30-04-2020', 368);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '16-11-2020', '09-12-2020', 461);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '26-09-2020', '26-10-2020', 224);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '16-08-2020', '19-08-2020', 402);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0012', '07-12-2020', '14-12-2020', 274);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '25-04-2020', '19-05-2020', 486);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '08-03-2021', '10-03-2021', 107);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '12-02-2019', '26-02-2019', 286);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '20-04-2021', '11-05-2021', 154);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0013', '03-01-2022', '14-01-2022', 212);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '22-08-2019', '13-09-2019', 435);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '12-02-2021', '20-02-2021', 261);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '04-08-2020', '30-08-2020', 158);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '31-05-2020', '21-06-2020', 180);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '01-01-2020', '17-01-2020', 103);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0005', '05-09-2021', '10-09-2021', 377);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0006', '10-09-2020', '01-10-2020', 30);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '04-07-2019', '14-07-2019', 453);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '05-01-2021', '01-02-2021', 167);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0004', '24-07-2022', '03-08-2022', 61);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '13-08-2022', '16-08-2022', 83);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0020', '17-03-2020', '24-03-2020', 464);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '24-12-2020', '31-12-2020', 182);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '02-05-2022', '14-05-2022', 159);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0005', '02-04-2021', '14-04-2021', 262);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0004', '09-04-2022', '09-05-2022', 493);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '31-01-2019', '27-02-2019', 49);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '16-04-2022', '02-05-2022', 416);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0008', '09-11-2019', '27-11-2019', 42);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '23-03-2021', '07-04-2021', 407);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '07-06-2021', '25-06-2021', 78);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0002', '07-09-2021', '10-09-2021', 419);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0019', '22-05-2021', '27-05-2021', 70);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '02-12-2020', '29-12-2020', 316);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '20-11-2021', '02-12-2021', 227);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '16-08-2022', '', 379);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0019', '03-10-2020', '22-10-2020', 150);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '11-09-2021', '15-09-2021', 395);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '09-09-2021', '28-09-2021', 376);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '25-02-2020', '29-02-2020', 469);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '07-06-2020', '23-06-2020', 235);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '12-04-2021', '29-04-2021', 402);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0008', '17-04-2022', '22-04-2022', 320);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0002', '26-08-2021', '11-09-2021', 386);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '02-12-2021', '12-12-2021', 235);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0019', '16-01-2020', '05-02-2020', 308);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '31-07-2022', '27-08-2022', 129);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '07-03-2020', '17-03-2020', 288);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0013', '24-12-2019', '20-01-2020', 371);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0020', '07-12-2021', '01-01-2022', 193);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '18-07-2019', '24-07-2019', 272);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '26-11-2020', '09-12-2020', 255);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0019', '19-05-2020', '12-06-2020', 161);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0014', '25-04-2019', '16-05-2019', 428);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '17-08-2020', '24-08-2020', 338);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0005', '06-08-2022', '', 411);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0012', '05-07-2021', '12-07-2021', 196);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0011', '08-04-2021', '07-05-2021', 359);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '04-06-2021', '22-06-2021', 89);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0020', '28-01-2020', '06-02-2020', 261);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '19-11-2021', '29-11-2021', 36);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0020', '13-11-2019', '15-11-2019', 240);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0009', '20-02-2020', '28-02-2020', 140);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '03-03-2021', '16-03-2021', 60);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '29-07-2020', '31-07-2020', 191);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '25-02-2020', '05-03-2020', 50);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0005', '30-05-2021', '15-06-2021', 487);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0005', '28-08-2019', '09-09-2019', 240);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '26-08-2020', '28-08-2020', 89);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0007', '05-10-2019', '04-11-2019', 418);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '25-05-2021', '07-06-2021', 261);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '06-02-2022', '07-03-2022', 64);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '22-07-2021', '05-08-2021', 276);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0004', '22-05-2019', '19-06-2019', 225);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '26-02-2021', '04-03-2021', 480);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '02-11-2020', '07-11-2020', 42);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0020', '24-12-2019', '07-01-2020', 126);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '11-03-2022', '20-03-2022', 389);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0007', '21-09-2021', '10-10-2021', 136);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0005', '09-04-2019', '20-04-2019', 90);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '08-06-2020', '28-06-2020', 84);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '20-10-2020', '25-10-2020', 295);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '24-11-2020', '18-12-2020', 71);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0013', '15-03-2019', '22-03-2019', 222);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0019', '11-04-2022', '10-05-2022', 300);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '15-11-2019', '05-12-2019', 392);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '06-08-2020', '26-08-2020', 466);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '20-06-2019', '13-07-2019', 213);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '12-04-2019', '02-05-2019', 267);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '11-03-2022', '25-03-2022', 496);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '22-02-2022', '19-03-2022', 263);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0014', '20-07-2020', '12-08-2020', 351);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '21-07-2019', '04-08-2019', 186);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0004', '18-10-2021', '12-11-2021', 180);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '10-09-2020', '25-09-2020', 283);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '12-10-2020', '17-10-2020', 152);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '19-11-2021', '29-11-2021', 390);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0004', '22-07-2022', '18-08-2022', 109);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '30-04-2022', '12-05-2022', 250);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0003', '26-08-2022', '', 182);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '13-03-2022', '31-03-2022', 319);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '11-02-2020', '14-02-2020', 115);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0014', '21-05-2019', '17-06-2019', 197);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '08-11-2021', '29-11-2021', 212);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0012', '12-05-2020', '24-05-2020', 467);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0008', '25-04-2021', '10-05-2021', 100);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '23-06-2021', '06-07-2021', 418);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0019', '22-11-2019', '14-12-2019', 205);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '11-10-2021', '04-11-2021', 450);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '25-04-2019', '14-05-2019', 265);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '21-07-2022', '14-08-2022', 37);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '20-01-2020', '29-01-2020', 181);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '17-11-2020', '25-11-2020', 87);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '10-06-2019', '14-06-2019', 98);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '15-08-2020', '26-08-2020', 463);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0003', '03-11-2021', '28-11-2021', 471);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '02-07-2022', '30-07-2022', 441);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0019', '20-07-2021', '04-08-2021', 88);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '25-04-2022', '07-05-2022', 258);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '01-07-2020', '15-07-2020', 35);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '03-01-2022', '01-02-2022', 86);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '20-07-2021', '07-08-2021', 302);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '24-05-2022', '22-06-2022', 150);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '06-06-2022', '10-06-2022', 147);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '04-02-2022', '11-02-2022', 416);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '01-03-2022', '20-03-2022', 241);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0012', '29-09-2020', '05-10-2020', 308);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '02-04-2020', '15-04-2020', 438);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '29-08-2022', '', 286);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '19-11-2021', '23-11-2021', 333);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0013', '20-09-2020', '25-09-2020', 260);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '12-09-2021', '20-09-2021', 239);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '12-11-2019', '23-11-2019', 41);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0013', '24-08-2021', '03-09-2021', 61);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '13-12-2020', '24-12-2020', 232);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0011', '27-03-2022', '16-04-2022', 51);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0007', '28-11-2020', '24-12-2020', 161);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '17-08-2022', '', 145);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0013', '19-09-2021', '25-09-2021', 96);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '08-05-2021', '14-05-2021', 23);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0014', '04-08-2020', '28-08-2020', 299);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '06-05-2020', '15-05-2020', 408);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '26-07-2020', '13-08-2020', 49);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '27-04-2021', '01-05-2021', 376);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0020', '31-05-2022', '19-06-2022', 398);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0008', 'M0018', '13-07-2019', '24-07-2019', 181);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '20-11-2019', '17-12-2019', 455);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0001', 'M0003', '17-05-2020', '16-06-2020', 204);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '15-04-2021', '01-05-2021', 31);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0020', '07-08-2019', '30-08-2019', 272);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0012', '01-07-2022', '18-07-2022', 363);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '15-08-2021', '31-08-2021', 343);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0007', 'M0017', '30-11-2019', '22-12-2019', 393);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0010', 'M0001', '21-11-2019', '12-12-2019', 249);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0003', 'M0010', '19-12-2020', '11-01-2021', 23);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0009', 'M0020', '11-03-2021', '17-03-2021', 456);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0004', 'M0012', '19-08-2020', '21-08-2020', 214);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0006', 'M0016', '21-08-2019', '23-08-2019', 427);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0005', 'M0015', '07-10-2020', '12-10-2020', 45);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0007', '13-11-2019', '20-11-2019', 307);
+insert into supplier_detail (supplier_id, medicine_id, order_date, arrive_date, medicine_qty) values ('S0002', 'M0008', '06-01-2020', '08-01-2020', 72);
+
+
+--appointment_details--
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0013', 'M0010', 1, 11.45, 'V0011', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0002', 'M0017', 9, 27.6, 'V0004', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0003', 'M0005', 2, 3.11, 'V0012', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0004', 'M0016', 10, 16.64, 'V0003', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0005', 'M0008', 2, 17.45, 'V0003', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0006', 'M0010', 9, 11.45, 'V0010', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0007', 'M0013', 8, 3.17, 'V0015', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0008', 'M0013', 2, 3.17, 'V0003', 'E0002');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0009', 'M0006', 2, 5.14, 'V0003', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0010', 'M0010', 6, 11.45, 'V0010', 'E0005');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0011', 'M0008', 4, 17.45, 'V0008', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0012', 'M0008', 5, 17.45, 'V0010', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0013', 'M0012', 5, 23.58, 'V0006', 'E0003');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0014', 'M0020', 2, 16.33, 'V0011', 'E0012');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0015', 'M0003', 5, 22.4, 'V0013', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0016', 'M0002', 5, 28.5, 'V0011', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0017', 'M0003', 9, 22.4, 'V0009', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0018', 'M0013', 4, 3.17, 'V0002', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0019', 'M0009', 3, 30.19, 'V0015', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0120', 'M0013', 6, 3.17, 'V0001', 'E0005');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0021', 'M0003', 1, 22.4, 'V0013', 'E0019');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0022', 'M0001', 6, 28.27, 'V0003', 'E0003');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0023', 'M0014', 10, 26.22, 'V0004', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0024', 'M0002', 9, 28.5, 'V0002', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0025', 'M0018', 7, 20.93, 'V0014', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0026', 'M0015', 3, 16.67, 'V0011', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0027', 'M0001', 9, 28.27, 'V0009', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0028', 'M0016', 9, 16.64, 'V0004', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0029', 'M0017', 7, 27.6, 'V0012', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0030', 'M0011', 3, 11.04, 'V0007', 'E0015');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0031', 'M0009', 7, 30.19, 'V0013', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0032', 'M0017', 7, 27.6, 'V0003', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0033', 'M0016', 6, 16.64, 'V0010', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0034', 'M0019', 7, 33.74, 'V0015', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0035', 'M0010', 9, 11.45, 'V0012', 'E0005');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0036', 'M0005', 6, 3.11, 'V0002', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0037', 'M0011', 10, 11.04, 'V0001', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0038', 'M0002', 7, 28.5, 'V0008', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0039', 'M0019', 5, 33.74, 'V0007', 'E0003');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0040', 'M0006', 5, 5.14, 'V0010', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0041', 'M0011', 3, 11.04, 'V0010', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0042', 'M0015', 10, 16.67, 'V0001', 'E0019');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0146', 'M0015', 5, 16.67, 'V0010', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0044', 'M0014', 4, 26.22, 'V0003', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0045', 'M0013', 5, 3.17, 'V0010', 'E0002');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0146', 'M0011', 5, 11.04, 'V0011', 'E0005');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0047', 'M0011', 7, 11.04, 'V0001', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0048', 'M0005', 6, 3.11, 'V0004', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0049', 'M0017', 9, 27.6, 'V0008', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0150', 'M0020', 10, 16.33, 'V0003', 'E0005');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0051', 'M0015', 3, 16.67, 'V0004', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0072', 'M0011', 5, 11.04, 'V0002', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0053', 'M0002', 6, 28.5, 'V0002', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0054', 'M0005', 9, 3.11, 'V0008', 'E0007');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0055', 'M0015', 9, 16.67, 'V0015', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0036', 'M0015', 8, 16.67, 'V0015', 'E0006');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0057', 'M0002', 10, 28.5, 'V0003', 'E0012');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0058', 'M0011', 5, 11.04, 'V0011', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0059', 'M0008', 10, 17.45, 'V0013', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0060', 'M0013', 3, 3.17, 'V0006', 'E0015');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0061', 'M0018', 8, 20.93, 'V0010', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0062', 'M0012', 4, 23.58, 'V0011', 'E0012');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0063', 'M0004', 7, 17.88, 'V0006', 'E0003');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0114', 'M0012', 2, 23.58, 'V0013', 'E0005');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0015', 'M0007', 2, 12.49, 'V0007', 'E0006');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0066', 'M0012', 5, 23.58, 'V0005', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0067', 'M0002', 1, 28.5, 'V0005', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0068', 'M0020', 6, 16.33, 'V0004', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0069', 'M0017', 7, 27.6, 'V0011', 'E0007');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0070', 'M0008', 5, 17.45, 'V0013', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0071', 'M0017', 1, 27.6, 'V0003', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0072', 'M0018', 5, 20.93, 'V0007', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0073', 'M0009', 8, 30.19, 'V0008', 'E0014');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0074', 'M0007', 1, 12.49, 'V0006', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0075', 'M0004', 5, 17.88, 'V0004', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0076', 'M0009', 6, 30.19, 'V0003', 'E0012');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0077', 'M0013', 4, 3.17, 'V0005', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0078', 'M0006', 3, 5.14, 'V0014', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0079', 'M0015', 7, 16.67, 'V0014', 'E0015');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0080', 'M0018', 5, 20.93, 'V0011', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0081', 'M0017', 6, 27.6, 'V0005', 'E0005');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0082', 'M0017', 10, 27.6, 'V0010', 'E0003');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0083', 'M0017', 4, 27.6, 'V0008', 'E0014');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0084', 'M0019', 8, 33.74, 'V0006', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0085', 'M0010', 3, 11.45, 'V0005', 'E0002');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0086', 'M0009', 7, 30.19, 'V0004', 'E0019');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0087', 'M0013', 6, 3.17, 'V0013', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0088', 'M0017', 8, 27.6, 'V0008', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0089', 'M0019', 1, 33.74, 'V0011', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0090', 'M0010', 10, 11.45, 'V0014', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0101', 'M0001', 1, 28.27, 'V0001', 'E0006');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0092', 'M0003', 1, 22.4, 'V0010', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0093', 'M0008', 4, 17.45, 'V0014', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0094', 'M0010', 4, 11.45, 'V0006', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0095', 'M0017', 6, 27.6, 'V0004', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0096', 'M0016', 6, 16.64, 'V0012', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0097', 'M0003', 1, 22.4, 'V0003', 'E0006');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0098', 'M0007', 4, 12.49, 'V0011', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0099', 'M0009', 5, 30.19, 'V0006', 'E0019');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0100', 'M0011', 2, 11.04, 'V0003', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0101', 'M0014', 8, 26.22, 'V0008', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0102', 'M0004', 5, 17.88, 'V0011', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0103', 'M0010', 5, 11.45, 'V0013', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0104', 'M0015', 1, 16.67, 'V0002', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0105', 'M0015', 9, 16.67, 'V0006', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0106', 'M0014', 10, 26.22, 'V0001', 'E0006');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0107', 'M0013', 4, 3.17, 'V0011', 'E0007');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0108', 'M0020', 7, 16.33, 'V0002', 'E0014');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0109', 'M0012', 4, 23.58, 'V0011', 'E0003');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0110', 'M0016', 9, 16.64, 'V0002', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0111', 'M0012', 3, 23.58, 'V0013', 'E0015');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0112', 'M0001', 9, 28.27, 'V0015', 'E0019');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0116', 'M0001', 9, 28.27, 'V0001', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0114', 'M0007', 4, 12.49, 'V0005', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0115', 'M0015', 8, 16.67, 'V0005', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0116', 'M0005', 7, 3.11, 'V0003', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0117', 'M0003', 3, 22.4, 'V0013', 'E0005');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0118', 'M0002', 5, 28.5, 'V0003', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0119', 'M0016', 10, 16.64, 'V0003', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0120', 'M0013', 6, 3.17, 'V0015', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0121', 'M0012', 8, 23.58, 'V0009', 'E0002');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0122', 'M0017', 6, 27.6, 'V0009', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0123', 'M0010', 3, 11.45, 'V0014', 'E0007');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0124', 'M0014', 7, 26.22, 'V0004', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0125', 'M0017', 10, 27.6, 'V0015', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0126', 'M0002', 6, 28.5, 'V0013', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0127', 'M0008', 2, 17.45, 'V0005', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0128', 'M0012', 2, 23.58, 'V0001', 'E0015');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0129', 'M0012', 3, 23.58, 'V0014', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0130', 'M0012', 2, 23.58, 'V0005', 'E0014');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0131', 'M0005', 8, 3.11, 'V0006', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0132', 'M0019', 4, 33.74, 'V0012', 'E0015');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0133', 'M0019', 8, 33.74, 'V0005', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0134', 'M0011', 2, 11.04, 'V0009', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0135', 'M0007', 1, 12.49, 'V0001', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0136', 'M0012', 9, 23.58, 'V0008', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0137', 'M0002', 6, 28.5, 'V0005', 'E0019');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0138', 'M0018', 6, 20.93, 'V0010', 'E0019');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0139', 'M0011', 9, 11.04, 'V0005', 'E0014');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0140', 'M0015', 7, 16.67, 'V0010', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0141', 'M0015', 9, 16.67, 'V0010', 'E0006');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0142', 'M0009', 10, 30.19, 'V0015', 'E0012');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0143', 'M0019', 8, 33.74, 'V0004', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0143', 'M0015', 4, 16.67, 'V0005', 'E0006');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0145', 'M0007', 5, 12.49, 'V0012', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0146', 'M0018', 8, 20.93, 'V0002', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0147', 'M0005', 6, 3.11, 'V0010', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0148', 'M0008', 2, 17.45, 'V0012', 'E0007');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0139', 'M0016', 1, 16.64, 'V0010', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0150', 'M0014', 6, 26.22, 'V0004', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0001', 'M0006', 8, 5.14, 'V0002', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0012', 'M0007', 4, 12.49, 'V0004', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0003', 'M0004', 4, 17.88, 'V0010', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0114', 'M0010', 4, 11.45, 'V0005', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0005', 'M0008', 8, 17.45, 'V0001', 'E0003');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0006', 'M0001', 8, 28.27, 'V0014', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0117', 'M0003', 4, 22.4, 'V0011', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0008', 'M0007', 10, 12.49, 'V0002', 'E0002');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0009', 'M0014', 9, 26.22, 'V0002', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0010', 'M0009', 8, 30.19, 'V0013', 'E0003');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0011', 'M0013', 7, 3.17, 'V0015', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0012', 'M0020', 7, 16.33, 'V0015', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0013', 'M0011', 1, 11.04, 'V0013', 'E0019');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0014', 'M0014', 4, 26.22, 'V0012', 'E0014');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0015', 'M0005', 7, 3.11, 'V0004', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0016', 'M0017', 1, 27.6, 'V0008', 'E0002');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0017', 'M0001', 8, 28.27, 'V0013', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0018', 'M0004', 5, 17.88, 'V0003', 'E0012');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0019', 'M0020', 5, 16.33, 'V0012', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0020', 'M0010', 2, 11.45, 'V0012', 'E0002');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0021', 'M0005', 5, 3.11, 'V0010', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0019', 'M0014', 2, 26.22, 'V0011', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0023', 'M0020', 6, 16.33, 'V0006', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0024', 'M0002', 5, 28.5, 'V0007', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0025', 'M0008', 7, 17.45, 'V0003', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0026', 'M0014', 10, 26.22, 'V0007', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0027', 'M0011', 10, 11.04, 'V0006', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0128', 'M0020', 2, 16.33, 'V0003', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0029', 'M0010', 6, 11.45, 'V0002', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0130', 'M0009', 6, 30.19, 'V0013', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0031', 'M0014', 2, 26.22, 'V0008', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0032', 'M0018', 3, 20.93, 'V0013', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0033', 'M0008', 2, 17.45, 'V0011', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0034', 'M0001', 4, 28.27, 'V0006', 'E0014');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0035', 'M0019', 1, 33.74, 'V0002', 'E0003');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0037', 'M0002', 8, 28.5, 'V0009', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0037', 'M0015', 7, 16.67, 'V0009', 'E0003');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0038', 'M0002', 3, 28.5, 'V0004', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0039', 'M0012', 7, 23.58, 'V0007', 'E0002');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0040', 'M0014', 5, 26.22, 'V0015', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0041', 'M0014', 3, 26.22, 'V0013', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0042', 'M0007', 7, 12.49, 'V0001', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0043', 'M0019', 2, 33.74, 'V0003', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0044', 'M0018', 4, 20.93, 'V0014', 'E0015');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0045', 'M0001', 3, 28.27, 'V0014', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0046', 'M0015', 10, 16.67, 'V0004', 'E0019');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0047', 'M0001', 9, 28.27, 'V0008', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0048', 'M0011', 4, 11.04, 'V0006', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0049', 'M0003', 6, 22.4, 'V0010', 'E0019');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0050', 'M0008', 5, 17.45, 'V0010', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0051', 'M0004', 1, 17.88, 'V0004', 'E0012');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0052', 'M0013', 4, 3.17, 'V0005', 'E0007');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0053', 'M0018', 4, 20.93, 'V0003', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0054', 'M0004', 2, 17.88, 'V0005', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0055', 'M0006', 3, 5.14, 'V0002', 'E0002');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0056', 'M0012', 7, 23.58, 'V0014', 'E0014');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0057', 'M0018', 8, 20.93, 'V0004', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0058', 'M0004', 2, 17.88, 'V0008', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0059', 'M0007', 5, 12.49, 'V0006', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0060', 'M0011', 10, 11.04, 'V0005', 'E0005');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0061', 'M0015', 1, 16.67, 'V0015', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0062', 'M0006', 10, 5.14, 'V0015', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0063', 'M0010', 7, 11.45, 'V0013', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0064', 'M0007', 10, 12.49, 'V0005', 'E0014');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0065', 'M0017', 6, 27.6, 'V0009', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0076', 'M0003', 7, 22.4, 'V0011', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0067', 'M0008', 6, 17.45, 'V0007', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0068', 'M0008', 9, 17.45, 'V0001', 'E0019');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0069', 'M0004', 1, 17.88, 'V0001', 'E0015');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0070', 'M0015', 1, 16.67, 'V0009', 'E0014');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0071', 'M0015', 6, 16.67, 'V0009', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0072', 'M0002', 4, 28.5, 'V0008', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0073', 'M0018', 9, 20.93, 'V0012', 'E0006');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0074', 'M0018', 4, 20.93, 'V0014', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0075', 'M0018', 4, 20.93, 'V0004', 'E0006');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0076', 'M0019', 4, 33.74, 'V0014', 'E0007');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0077', 'M0004', 1, 17.88, 'V0013', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0078', 'M0016', 6, 16.64, 'V0003', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0079', 'M0007', 7, 12.49, 'V0006', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0080', 'M0014', 3, 26.22, 'V0006', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0081', 'M0017', 3, 27.6, 'V0003', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0082', 'M0007', 2, 12.49, 'V0014', 'E0006');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0083', 'M0019', 3, 33.74, 'V0011', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0084', 'M0006', 9, 5.14, 'V0007', 'E0002');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0085', 'M0015', 3, 16.67, 'V0014', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0086', 'M0012', 2, 23.58, 'V0010', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0087', 'M0003', 4, 22.4, 'V0009', 'E0005');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0088', 'M0001', 8, 28.27, 'V0002', 'E0006');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0089', 'M0014', 10, 26.22, 'V0004', 'E0007');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0090', 'M0014', 4, 26.22, 'V0003', 'E0012');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0091', 'M0018', 10, 20.93, 'V0004', 'E0002');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0092', 'M0010', 6, 11.45, 'V0013', 'E0006');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0093', 'M0013', 1, 3.17, 'V0004', 'E0012');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0094', 'M0007', 4, 12.49, 'V0005', 'E0015');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0095', 'M0018', 8, 20.93, 'V0010', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0096', 'M0008', 9, 17.45, 'V0011', 'E0019');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0097', 'M0016', 5, 16.64, 'V0011', 'E0002');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0098', 'M0002', 6, 28.5, 'V0007', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0099', 'M0012', 7, 23.58, 'V0001', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0100', 'M0011', 3, 11.04, 'V0009', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0101', 'M0020', 3, 16.33, 'V0001', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0102', 'M0006', 5, 5.14, 'V0003', 'E0005');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0103', 'M0007', 3, 12.49, 'V0003', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0104', 'M0015', 7, 16.67, 'V0010', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0105', 'M0004', 1, 17.88, 'V0002', 'E0002');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0106', 'M0012', 8, 23.58, 'V0014', 'E0005');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0107', 'M0019', 4, 33.74, 'V0012', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0108', 'M0003', 5, 22.4, 'V0014', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0109', 'M0002', 5, 28.5, 'V0007', 'E0006');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0110', 'M0003', 4, 22.4, 'V0007', 'E0003');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0111', 'M0013', 6, 3.17, 'V0011', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0112', 'M0018', 9, 20.93, 'V0012', 'E0003');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0113', 'M0012', 9, 23.58, 'V0013', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0114', 'M0019', 8, 33.74, 'V0010', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0115', 'M0017', 7, 27.6, 'V0010', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0116', 'M0014', 6, 26.22, 'V0007', 'E0014');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0117', 'M0005', 1, 3.11, 'V0011', 'E0002');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0118', 'M0003', 3, 22.4, 'V0011', 'E0007');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0119', 'M0002', 10, 28.5, 'V0006', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0120', 'M0011', 7, 11.04, 'V0001', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0121', 'M0003', 5, 22.4, 'V0002', 'E0015');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0122', 'M0014', 1, 26.22, 'V0002', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0123', 'M0004', 6, 17.88, 'V0003', 'E0019');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0124', 'M0007', 7, 12.49, 'V0008', 'E0007');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0125', 'M0020', 5, 16.33, 'V0012', 'E0007');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0126', 'M0012', 3, 23.58, 'V0004', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0127', 'M0007', 3, 12.49, 'V0011', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0128', 'M0020', 2, 16.33, 'V0009', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0129', 'M0004', 6, 17.88, 'V0007', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0130', 'M0007', 1, 12.49, 'V0012', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0131', 'M0014', 3, 26.22, 'V0002', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0132', 'M0001', 4, 28.27, 'V0009', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0133', 'M0007', 2, 12.49, 'V0003', 'E0015');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0134', 'M0006', 7, 5.14, 'V0007', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0135', 'M0020', 6, 16.33, 'V0013', 'E0002');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0136', 'M0017', 3, 27.6, 'V0015', 'E0014');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0137', 'M0007', 3, 12.49, 'V0014', 'E0003');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0138', 'M0003', 9, 22.4, 'V0009', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0139', 'M0012', 8, 23.58, 'V0010', 'E0012');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0140', 'M0012', 9, 23.58, 'V0002', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0141', 'M0012', 8, 23.58, 'V0004', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0142', 'M0014', 7, 26.22, 'V0009', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0143', 'M0006', 3, 5.14, 'V0005', 'E0006');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0144', 'M0015', 9, 16.67, 'V0010', 'E0003');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0145', 'M0012', 5, 23.58, 'V0001', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0146', 'M0009', 7, 30.19, 'V0011', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0147', 'M0014', 7, 26.22, 'V0004', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0148', 'M0009', 2, 30.19, 'V0007', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0149', 'M0012', 5, 23.58, 'V0001', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0150', 'M0012', 9, 23.58, 'V0005', 'E0003');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0001', 'M0012', 3, 23.58, 'V0007', 'E0002');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0002', 'M0014', 10, 26.22, 'V0007', 'E0012');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0003', 'M0003', 5, 22.4, 'V0010', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0004', 'M0002', 8, 28.5, 'V0011', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0005', 'M0017', 3, 27.6, 'V0001', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0006', 'M0004', 8, 17.88, 'V0015', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0007', 'M0017', 4, 27.6, 'V0005', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0008', 'M0010', 2, 11.45, 'V0010', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0009', 'M0017', 3, 27.6, 'V0011', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0010', 'M0007', 1, 12.49, 'V0013', 'E0012');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0113', 'M0011', 10, 11.04, 'V0012', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0012', 'M0006', 2, 5.14, 'V0004', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0013', 'M0009', 7, 30.19, 'V0006', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0120', 'M0020', 4, 16.33, 'V0011', 'E0006');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0016', 'M0003', 7, 22.4, 'V0009', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0016', 'M0019', 3, 33.74, 'V0007', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0017', 'M0001', 2, 28.27, 'V0004', 'E0019');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0020', 'M0015', 1, 16.67, 'V0015', 'E0014');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0017', 'M0018', 1, 20.93, 'V0011', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0022', 'M0020', 1, 16.33, 'V0012', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0021', 'M0002', 3, 28.5, 'V0014', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0022', 'M0019', 3, 33.74, 'V0005', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0023', 'M0004', 10, 17.88, 'V0012', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0024', 'M0006', 4, 5.14, 'V0007', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0025', 'M0012', 3, 23.58, 'V0012', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0028', 'M0017', 3, 27.6, 'V0003', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0030', 'M0001', 6, 28.27, 'V0010', 'E0002');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0028', 'M0008', 3, 17.45, 'V0001', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0029', 'M0007', 8, 12.49, 'V0009', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0030', 'M0012', 9, 23.58, 'V0015', 'E0012');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0031', 'M0015', 10, 16.67, 'V0009', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0031', 'M0005', 7, 3.11, 'V0002', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0033', 'M0019', 9, 33.74, 'V0003', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0034', 'M0002', 3, 28.5, 'V0002', 'E0007');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0035', 'M0019', 10, 33.74, 'V0004', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0036', 'M0016', 1, 16.64, 'V0013', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0037', 'M0007', 10, 12.49, 'V0007', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0038', 'M0017', 5, 27.6, 'V0013', 'E0012');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0039', 'M0007', 1, 12.49, 'V0015', 'E0005');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0040', 'M0006', 9, 5.14, 'V0001', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0041', 'M0008', 5, 17.45, 'V0012', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0042', 'M0007', 5, 12.49, 'V0005', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0043', 'M0015', 2, 16.67, 'V0013', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0044', 'M0010', 4, 11.45, 'V0009', 'E0003');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0045', 'M0002', 10, 28.5, 'V0001', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0046', 'M0011', 5, 11.04, 'V0007', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0046', 'M0013', 2, 11.04, 'V0009', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0048', 'M0012', 7, 23.58, 'V0005', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0049', 'M0018', 6, 20.93, 'V0010', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0050', 'M0001', 10, 28.27, 'V0013', 'E0008');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0051', 'M0014', 4, 26.22, 'V0005', 'E0005');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0052', 'M0020', 2, 16.33, 'V0009', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0053', 'M0004', 7, 17.88, 'V0014', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0054', 'M0009', 3, 30.19, 'V0005', 'E0009');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0055', 'M0018', 4, 20.93, 'V0012', 'E0007');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0056', 'M0018', 2, 20.93, 'V0005', 'E0012');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0057', 'M0013', 2, 3.17, 'V0009', 'E0015');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0058', 'M0005', 2, 3.11, 'V0004', 'E0015');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0059', 'M0011', 2, 11.04, 'V0009', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0060', 'M0012', 6, 23.58, 'V0008', 'E0005');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0068', 'M0004', 10, 17.88, 'V0006', 'E0015');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0062', 'M0007', 8, 12.49, 'V0003', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0063', 'M0019', 2, 33.74, 'V0011', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0064', 'M0001', 5, 28.27, 'V0008', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0065', 'M0017', 4, 27.6, 'V0008', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0066', 'M0019', 6, 33.74, 'V0004', 'E0019');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0067', 'M0006', 2, 5.14, 'V0014', 'E0019');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0067', 'M0014', 2, 26.22, 'V0008', 'E0006');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0069', 'M0007', 3, 12.49, 'V0008', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0070', 'M0017', 10, 27.6, 'V0015', 'E0007');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0071', 'M0013', 4, 3.17, 'V0008', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0072', 'M0003', 3, 22.4, 'V0007', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0073', 'M0014', 5, 26.22, 'V0008', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0074', 'M0018', 6, 20.93, 'V0010', 'E0019');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0075', 'M0019', 9, 33.74, 'V0013', 'E0012');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0076', 'M0011', 9, 11.04, 'V0005', 'E0005');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0077', 'M0002', 8, 28.5, 'V0011', 'E0006');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0078', 'M0001', 2, 28.27, 'V0011', 'E0007');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0079', 'M0011', 4, 11.04, 'V0003', 'E0016');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0006', 'A0080', 'M0002', 4, 28.5, 'V0011', 'E0005');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0007', 'A0081', 'M0001', 1, 28.27, 'V0007', 'E0005');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0004', 'A0082', 'M0015', 9, 16.67, 'V0002', 'E0014');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0083', 'M0013', 6, 3.17, 'V0002', 'E0012');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0084', 'M0001', 5, 28.27, 'V0001', 'E0004');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0085', 'M0020', 9, 16.33, 'V0004', 'E0001');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0086', 'M0015', 8, 16.67, 'V0006', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0087', 'M0008', 5, 17.45, 'V0008', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0088', 'M0002', 1, 28.5, 'V0009', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0008', 'A0089', 'M0019', 7, 33.74, 'V0015', 'E0003');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0090', 'M0010', 6, 11.45, 'V0010', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0091', 'M0004', 3, 17.88, 'V0002', 'E0014');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0092', 'M0007', 6, 12.49, 'V0014', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0010', 'A0093', 'M0014', 5, 26.22, 'V0004', 'E0020');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0002', 'A0094', 'M0001', 9, 28.27, 'V0005', 'E0010');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0009', 'A0095', 'M0005', 4, 3.11, 'V0006', 'E0019');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0094', 'M0011', 8, 11.04, 'V0011', 'E0011');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0095', 'M0012', 10, 23.58, 'V0011', 'E0017');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0005', 'A0098', 'M0011', 7, 11.04, 'V0007', 'E0018');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0003', 'A0099', 'M0011', 7, 11.04, 'V0010', 'E0013');
+insert into Appointment_details (treatment_id, appointment_id, medicine_id, medicine_qty, medicine_unitPrice, veterinarian_id, cage_id) values ('T0001', 'A0100', 'M0009', 9, 30.19, 'V0010', 'E0005');
+
+COMMIT; 
+
+SELECT COUNT(*) AS NoOfCustomer
+FROM customer;
+SELECT COUNT(*) AS NoOfPet
+FROM pet;
+SELECT COUNT(*) AS NoOfPayment
+FROM payment;
+SELECT COUNT(*) AS NoOfAppointment
+FROM appointment;
+SELECT COUNT(*) AS NoOfTreatment
+FROM treatment;
+SELECT COUNT(*) AS NoOfVeterinarian
+FROM veterinarian;
+SELECT COUNT(*) AS NoOfCage
+FROM cage;
+SELECT COUNT(*) AS NoOfMedicine
+FROM medicine;
+SELECT COUNT(*) AS NoOfSupplier
+FROM supplier;
+SELECT COUNT(*) AS NoOfSupplierDetail
+FROM supplier_detail;
+SELECT COUNT(*) AS NoOfAppointmentDetails
+FROM appointment_details;
+
+
+
